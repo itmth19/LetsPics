@@ -11,10 +11,9 @@ angular.module('starter.controllers', [])
   $scope.friend = Friends.get($stateParams.friendId);
 })
 
-.controller('SearchCtrl', function($scope) {
-	
+.controller('SearchCtrl', function($scope, Searchlist) {
+  $scope.searchlist = Searchlist.all();
 })
-
 
 .controller('SearchDetailCtrl', function($scope,$stateParams,Friends) {
 	$scope.getImage = function getImage() {

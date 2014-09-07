@@ -13,6 +13,9 @@ angular.module('starter.controllers', [])
 
 .controller('SearchCtrl', function($scope, Searchlist) {
   $scope.searchlist = Searchlist.all();
+  $scope.getSearchItemLink = function(searchitem){
+    
+  };
 })
 
 .controller('SearchDetailCtrl', function($scope,$stateParams,Friends) {

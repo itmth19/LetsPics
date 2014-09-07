@@ -8,7 +8,7 @@ var sendpic = require('./sendpic');
 var port ='8888';
 var db_host = 'localhost';
 var db_user = 'root';
-var db_pass = 'root';
+var db_pass = '';
 var db_name = 'letspic';
 var db_port = '3306';
 
@@ -80,8 +80,7 @@ function responseTo(req,res){
 }
 
 function getUserInfo(id,res){
-  var result = '';
-  var query = "SELECT * FROM tbl_users ";
+  var query = "SELECT * FROM Users ";
   query += "WHERE ID = " + db.escape(id);
   cnn.query(query,function(error,rows,fields){
     if(error){
@@ -89,21 +88,20 @@ function getUserInfo(id,res){
     } 
     else{
       /*get the result*/ 
-        result = JSON.stringify(rows[0]);
+        var result = JSON.stringify(rows[0]);
         returnJsonString(result,res);
     }
   });
 }
 
-function getFriendsList(id,limit_number){
+function getFriendsList(id,res){//作成中
   //get user from different countries
-  var user = JSON.parse(getUserInfo(id));
-  var result = '';
-  var result = {};
-  var query = "SELECT * FROM tbl_users ";
+  //var user = JSON.parse(getUserInfo(id));
+  //var result = '';
+  //var result = {};
+  var query = "SELECT * FROM Users ";
   query += "WHERE ID = " + db.escape(id) + " ";
-  query += "AND country <> " + user["nationality"] + " "; /*set different coutries*/
-  query += "ORDER BY RAND() LIMIT " + limit_number;
+  query += "AND country <> " + user["country"] + " "; //set different coutries
   cnn.query(query,function(error,rows,fields){
     if(error) throw "ERROR";
     result = rows;
@@ -112,17 +110,19 @@ function getFriendsList(id,limit_number){
   return JSON.stringify(result);
 }
 
-function makeFriendWith(user_id,friend_id){
-  var query = '';
-  query +="SELECT * FROM tbl_pics "
-  cnn.query(query,function(error,rows,fields){
-    if(error) throw "ERROR";
-    result = rows;
-  });
-}
-
-function checkIfLikeTwice(user_id,friend_id){
-  
+function makeFriendWith(user_id,friend_id) {
+  if (user_id > friend_id) {
+    var tmp = user_id;
+    user_id = friend_id;
+    friend_id = tmp;
+  }
+  var query = "INSERT IGNORE INTO FriendList (ID1, ID2) ";
+  query += "VALUES (?, ?);";
+    cnn.query(query, [user_id, friend_id], function(error, fields) {
+      if (error) {
+        throw error;
+      }
+    });
 }
 
 function sendMessage(user_id,friend_id,message){
@@ -133,51 +133,12 @@ function sendMessage(user_id,friend_id,message){
   /*add updates to user's updates*/
 }
 
-function likeAPicture(user_id,pic_id,res){/*作成中*/
+function userRegistration(facebook_id, name, country, sex) {
   var query = '';
-  
-  /*save in to tbl_pics*/
-  var result = {};
-  var query = "UPDATE tbl_pics ";
-  query +="SET liked = " + db.escape('1');
-  query += " WHERE ID = " + db.escape(pic_id);
-  cnn.query(query,function(error,rows,fields){
-    if(error){
-      returnSuccess(res);
-    }
-    else{
-      //add updates to user
-      addUpdatesPhotoLiked(user_id,'pic',pic_id,user_id,res);
-    } 
-  });
-}
-
-function addUpdatesPhotoLiked(user_id,_type,pic_id,friend_id,res){/*作成中*/
-  /*save in to tbl_user_id_updates*/
-  var result = {};
-  var post = {type:_type, info:friend_id, checked: '0', init_date: new Date().toJSON().slice(0,10) };
-  var query = "INSERT INTO tbl_user_" + user_id + "_updates ";
-  query +=" SET ? ";
-  cnn.query(query,[post],function(error,rows,fields){
-    if(error){
-      sys.puts(error);
+  query = "INSERT IGNORE INTO Users (FacebookID, name, country, sex) VALUES (?, ?, ?, ?)";
+  cnn.query(query, [facebook_id, name, country, sex], function(error,fields){
+    if(error) {
       returnError(res);
-    }
-    else{
-      returnSuccess(res);
-    } 
-  });
-}
-
-
-function userRegistration(facebook_id,nationality,gener){
-  var query = '';
-  query = "INSERT IGNORE INTO tbl_users (FacebookID, country, sex) VALUES (";
-  query += db.escape(facebook_id) + ", '";
-  query += db.escape(nationality) + "', '";
-  query += db.escape(gener) + "');";
-  cnn.query(query,function(error,fields){
-    if(error) throw "ERROR";
   });
   
 }
